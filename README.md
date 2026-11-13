@@ -4,6 +4,12 @@
 
 The project demonstrates fundamental compiler design concepts using Python's built-in parsing capabilities and custom analysis and optimization logic.
 
+## Application Preview
+
+The following screenshot shows the PyTrace interactive dashboard, including its compiler navigation, analysis overview, optimization metrics, and original-versus-optimized code comparison.
+
+![PyTrace Dashboard](screenshots/dashboard.png)
+
 ---
 
 ## Overview
