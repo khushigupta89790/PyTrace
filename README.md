@@ -10,7 +10,6 @@ The following screenshot shows the PyTrace interactive dashboard, including its 
 
 ![PyTrace Dashboard](screenshots/dashboard.png)
 
----
 
 ## Overview
 
