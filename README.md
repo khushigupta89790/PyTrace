@@ -4,20 +4,23 @@
 
 The project demonstrates fundamental compiler design concepts using Python's built-in parsing capabilities and custom analysis and optimization logic.
 
+---
+
 ## Application Preview
 
 The following screenshot shows the PyTrace interactive dashboard, including its compiler navigation, analysis overview, optimization metrics, and original-versus-optimized code comparison.
 
 ![PyTrace Dashboard](screenshots/dashboard.png)
 
+---
 
-## Overview
+## 1. Project Overview
 
 PyTrace provides an interactive developer workbench where users can explore how Python source code is processed through different compiler stages.
 
 It helps users understand program structure, identify potential programming errors, inspect intermediate representations, and observe code optimization techniques.
 
-## Key Features
+## 2. Key Features
 
 - **Lexical Analysis:** Identifies and classifies tokens, including keywords, identifiers, operators, constants, and literals.
 - **Syntax Analysis:** Parses Python source code and generates an Abstract Syntax Tree (AST).
@@ -30,7 +33,7 @@ It helps users understand program structure, identify potential programming erro
 - **Execution Validation:** Compares the standard output of original and optimized programs.
 - **Interactive Dashboard:** Provides a Streamlit interface for exploring each stage of the compiler pipeline.
 
-## Technologies Used
+## 3. Technologies Used
 
 | Technology | Purpose |
 |---|---|
@@ -41,7 +44,7 @@ It helps users understand program structure, identify potential programming erro
 | Pandas | Tabular presentation of results |
 | Pytest | Automated testing |
 
-## System Architecture
+## 4. System Architecture
 
 PyTrace follows a sequential compiler analysis pipeline:
 
@@ -78,7 +81,7 @@ Execution Validation
 
 Each stage contributes to analyzing, transforming, or validating the source program.
 
-## Project Structure
+## 5. Project Structure
 
 ```text
 PyTrace/
@@ -98,6 +101,9 @@ PyTrace/
 ├── samples/
 │   └── sample.py
 │
+├── screenshots/
+│   └── dashboard.png
+│
 ├── tests/
 │   ├── test_lexer.py
 │   ├── test_parser.py
@@ -115,7 +121,7 @@ PyTrace/
 └── .gitignore
 ```
 
-## Installation and Setup
+## 6. Installation and Setup
 
 ### Prerequisites
 
@@ -123,14 +129,14 @@ PyTrace/
 - pip
 - Git
 
-### 1. Clone the repository
+### Step 1: Clone the repository
 
 ```bash
 git clone https://github.com/khushigupta89790/PyTrace.git
 cd PyTrace
 ```
 
-### 2. Create a virtual environment
+### Step 2: Create a virtual environment
 
 **Windows (PowerShell):**
 
@@ -144,13 +150,13 @@ Activate the environment:
 .venv\Scripts\Activate.ps1
 ```
 
-### 3. Install dependencies
+### Step 3: Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Running the Application
+## 7. Running the Application
 
 Start the Streamlit application:
 
@@ -168,7 +174,7 @@ Enter Python source code in the editor and select **Run Analysis** to explore th
 
 A sample Python program is also available in the `samples/` directory.
 
-## Running Automated Tests
+## 8. Running Automated Tests
 
 PyTrace includes an automated test suite implemented using Pytest.
 
@@ -192,7 +198,7 @@ The test suite covers:
 
 **Latest recorded test result: 48 tests passed.**
 
-## Current Limitations
+## 9. Current Limitations
 
 PyTrace is an educational compiler analysis and optimization system, not a complete implementation of the Python language compiler.
 
@@ -202,7 +208,7 @@ PyTrace is an educational compiler analysis and optimization system, not a compl
 - Execution validation compares standard output and does not establish equivalence of all program behaviour.
 - The execution validator uses subprocess execution with a timeout. It is not a secure sandbox, so only trusted source code should be executed.
 
-## Future Enhancements
+## 10. Future Enhancements
 
 - Expand support for additional Python syntax and expressions.
 - Improve semantic analysis and scope handling.
@@ -211,8 +217,7 @@ PyTrace is an educational compiler analysis and optimization system, not a compl
 - Add richer compiler diagnostics and debugging information.
 - Introduce more comprehensive execution and equivalence testing.
 
-## Learning Outcomes
-
+## 11. Learning Outcomes
 
 This project demonstrates practical implementation of fundamental compiler design concepts, including:
 
