@@ -11,20 +11,43 @@ class IntermediateCodeGenerator(ast.NodeVisitor):
 
     def new_temp(self):
         """Generate a temporary variable."""
-
         self.temp_count += 1
         return f"t{self.temp_count}"
 
     def new_label(self):
         """Generate a unique label."""
-
         self.label_count += 1
         return f"L{self.label_count}"
 
     def emit(self, instruction):
         """Append an instruction to the IR."""
-
         self.instructions.append(instruction)
+
+    def generate_slice_index(self, node):
+        """Generate an index or slice expression."""
+
+        if isinstance(node, ast.Slice):
+            lower = (
+                self.generate_expression(node.lower)
+                if node.lower is not None else ""
+            )
+            upper = (
+                self.generate_expression(node.upper)
+                if node.upper is not None else ""
+            )
+            step = (
+                self.generate_expression(node.step)
+                if node.step is not None else ""
+            )
+
+            result = f"{lower}:{upper}"
+
+            if node.step is not None:
+                result += f":{step}"
+
+            return result
+
+        return self.generate_expression(node)
 
     def generate_expression(self, node):
         """Convert expressions into three-address instructions."""
@@ -58,7 +81,6 @@ class IntermediateCodeGenerator(ast.NodeVisitor):
                 )
 
             temp = self.new_temp()
-
             self.emit(f"{temp} = {left} {operator} {right}")
 
             return temp
@@ -210,6 +232,102 @@ class IntermediateCodeGenerator(ast.NodeVisitor):
 
             return result
 
+        # LIST SUPPORT
+        elif isinstance(node, ast.List):
+
+            elements = [
+                self.generate_expression(element)
+                for element in node.elts
+            ]
+
+            temp = self.new_temp()
+
+            self.emit(
+                f"{temp} = LIST [{', '.join(elements)}]"
+            )
+
+            return temp
+
+        # TUPLE SUPPORT
+        elif isinstance(node, ast.Tuple):
+
+            elements = [
+                self.generate_expression(element)
+                for element in node.elts
+            ]
+
+            temp = self.new_temp()
+
+            self.emit(
+                f"{temp} = TUPLE ({', '.join(elements)})"
+            )
+
+            return temp
+
+        # SET SUPPORT
+        elif isinstance(node, ast.Set):
+
+            elements = [
+                self.generate_expression(element)
+                for element in node.elts
+            ]
+
+            temp = self.new_temp()
+
+            self.emit(
+                f"{temp} = SET {{{', '.join(elements)}}}"
+            )
+
+            return temp
+
+        # DICTIONARY SUPPORT
+        elif isinstance(node, ast.Dict):
+
+            entries = []
+
+            for key, value in zip(node.keys, node.values):
+
+                if key is None:
+                    raise NotImplementedError(
+                        "Dictionary unpacking is not supported."
+                    )
+
+                key_value = self.generate_expression(key)
+                item_value = self.generate_expression(value)
+
+                entries.append(
+                    f"{key_value}: {item_value}"
+                )
+
+            temp = self.new_temp()
+
+            self.emit(
+                f"{temp} = DICT {{{', '.join(entries)}}}"
+            )
+
+            return temp
+
+        # INDEXING AND SLICING SUPPORT
+        elif isinstance(node, ast.Subscript):
+
+            container = self.generate_expression(node.value)
+            index = self.generate_slice_index(node.slice)
+
+            temp = self.new_temp()
+
+            self.emit(
+                f"{temp} = {container}[{index}]"
+            )
+
+            return temp
+
+        # ATTRIBUTE ACCESS SUPPORT
+        elif isinstance(node, ast.Attribute):
+
+            value = self.generate_expression(node.value)
+
+            return f"{value}.{node.attr}"
+
         else:
             raise NotImplementedError(
                 f"Unsupported expression: {type(node).__name__}"
@@ -231,34 +349,49 @@ class IntermediateCodeGenerator(ast.NodeVisitor):
         for target in node.targets:
 
             if isinstance(target, ast.Name):
+
                 self.emit(f"{target.id} = {value}")
+
+            elif isinstance(target, ast.Subscript):
+
+                container = self.generate_expression(target.value)
+                index = self.generate_slice_index(target.slice)
+
+                self.emit(
+                    f"{container}[{index}] = {value}"
+                )
+
+            elif isinstance(target, ast.Attribute):
+
+                obj = self.generate_expression(target.value)
+
+                self.emit(
+                    f"{obj}.{target.attr} = {value}"
+                )
 
             else:
                 raise NotImplementedError(
-                    "Only simple variable assignments are supported."
+                    "Unsupported assignment target."
                 )
 
     def visit_AnnAssign(self, node):
         """Generate code for annotated assignments."""
 
         if node.value is not None:
+
             value = self.generate_expression(node.value)
 
             if isinstance(node.target, ast.Name):
+
                 self.emit(f"{node.target.id} = {value}")
 
             else:
                 raise NotImplementedError(
-                    "Only simple variable assignments are supported."
+                    "Only simple annotated variable assignments are supported."
                 )
 
     def visit_AugAssign(self, node):
         """Generate code for augmented assignments."""
-
-        if not isinstance(node.target, ast.Name):
-            raise NotImplementedError(
-                "Only simple variable augmented assignments are supported."
-            )
 
         operators = {
             ast.Add: "+",
@@ -279,20 +412,47 @@ class IntermediateCodeGenerator(ast.NodeVisitor):
 
         right = self.generate_expression(node.value)
 
+        if isinstance(node.target, ast.Name):
+
+            target = node.target.id
+
+        elif isinstance(node.target, ast.Subscript):
+
+            container = self.generate_expression(node.target.value)
+            index = self.generate_slice_index(node.target.slice)
+            target = f"{container}[{index}]"
+
+        else:
+            raise NotImplementedError(
+                "Unsupported augmented assignment target."
+            )
+
         self.emit(
-            f"{node.target.id} = {node.target.id} {operator} {right}"
+            f"{target} = {target} {operator} {right}"
         )
 
     def visit_Expr(self, node):
         """Handle standalone expressions and function calls."""
 
         if isinstance(node.value, ast.Call):
+
             function_name = self.expression_name(node.value.func)
 
             arguments = [
                 self.generate_expression(arg)
                 for arg in node.value.args
             ]
+
+            for keyword_node in node.value.keywords:
+
+                value = self.generate_expression(keyword_node.value)
+
+                if keyword_node.arg is None:
+                    arguments.append(f"**{value}")
+                else:
+                    arguments.append(
+                        f"{keyword_node.arg}={value}"
+                    )
 
             self.emit(
                 f"CALL {function_name}({', '.join(arguments)})"
@@ -362,9 +522,11 @@ class IntermediateCodeGenerator(ast.NodeVisitor):
 
         self.emit(f"{iterator} = ITER_INIT {iterable}")
         self.emit(f"LABEL {start_label}")
+
         self.emit(
             f"{node.target.id} = ITER_NEXT {iterator}"
         )
+
         self.emit(
             f"IF_ITER_DONE {node.target.id} GOTO {end_label}"
         )
